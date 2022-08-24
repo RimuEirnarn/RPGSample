@@ -2,6 +2,8 @@
 
 A sample game with following features: Battle, Role, Magic, Items, Inventory, and Characters.
 
+Note: This project still haven't implemented its sample game.
+
 ## Installation
 
 ```sh
