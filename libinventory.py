@@ -34,7 +34,6 @@ class FixedSizeArray:
     def __init__(self, size: int, noallocate=False):
         self._size = size
         self.__array: List[Union[ConstCreator, Any]] = [null]*size
-        self.__sizeof__ = lambda self: size
         self.__fake_address_UUID = PUID.make_random()
         self.__fake_address = self.__fake_address_UUID.body.upper()
         self.__noalloc = noallocate
@@ -425,7 +424,7 @@ class Inventory:
 
     def extend_inventory(self, array: FixedSizeArray):
         """Adding an Inventory array"""
-        if array is self._array or array.address == self._array.address:
+        if array in self._array_list:
             raise SameIdentifierException(
                 "array is the same as this instance array.")
 
@@ -460,3 +459,15 @@ class Inventory:
 
     def __repr__(self):
         return f"Inventory({self._name})"
+
+
+def _main():
+    fsa0 = FixedSizeArray(10, True)
+    fsa1 = FixedSizeArray(10)
+    lfsa = LinkedFSA(fsa0, fsa1)
+    lfsa.smart_insert(19, None)
+    lfsa.smart_get(19)
+    inventory = Inventory('Inventory-0', 50)
+    inventory.extend_inventory(FixedSizeArray(50, True))
+    inventory[51] = None
+    assert inventory[51] is None

@@ -4,7 +4,7 @@ from configparser import ConfigParser
 from dataclasses import dataclass
 from posixpath import exists, realpath, splitext
 from typing import Any, Literal, Mapping, Union
-
+from libsavestate import DataUnpickler
 from libpostreq import yaml_installed
 from libshared import DataPath, load, parse
 
@@ -12,34 +12,41 @@ from libshared import DataPath, load, parse
 
 
 class MagicPath(DataPath, prefix='magic'):
+    """Magic Protocol Handler"""
     def read(self):
         x = splitext(self.read_path())
-        if x[1] == '.yaml':
-            a = load(self.read_path())
-            return MagicType(a['name'], a['type'], a['speciality'])
-        if x[1] == '.ini':
-            a = load(self.read_path())
-            fs = 0
-            c = [False]*3
-            if 'speciality' not in a:
-                fs = 1
-            for i, b in enumerate(('name', 'type', 'speciality')):
-                if b in a['DEFAULTS']:
-                    c[i] = True
-            if fs == 1 and c[2] is False:
-                raise Exception(
-                    "Expecting speciality in outer section or in default section.")
-            c[2] = True
-            if sum(c) <= 2:
-                raise Exception("The expected arguments are minimal")
-            name = a['DEFAULTS']['name']
-            type = a['DEFAULTS']['type']
-            speciality = a['DEFAULTS']['speciality'] if fs == 0 else a['speciality']
-            return MagicType(name, type, speciality)
-        raise Exception("Unrecognized extention: %s" % x[1][1:])
+        if self.config.get("compiled", False) is False:
+            if x[1] == '.yaml':
+                a = load(self.read_path())
+                return MagicType(a['name'], a['type'], a['speciality'])
+            if x[1] == '.ini':
+                a = load(self.read_path())
+                fs = 0
+                c = [False]*3
+                if 'speciality' not in a:
+                    fs = 1
+                for i, b in enumerate(('name', 'type', 'speciality')):
+                    if b in a['DEFAULTS']:
+                        c[i] = True
+                if fs == 1 and c[2] is False:
+                    raise Exception(
+                       "Expecting speciality in outer section or in default section.")
+                c[2] = True
+                if sum(c) <= 2:
+                    raise Exception("The expected arguments are minimal")
+                name = a['DEFAULTS']['name']
+                type = a['DEFAULTS']['type']
+                speciality = a['DEFAULTS']['speciality'] if fs == 0 else a['speciality']
+                return MagicType(name, type, speciality)
+            raise Exception("Unrecognized extention: %s" % x[1][1:])
+        with open(x, 'rb') as f:
+            return DataUnpickler.unload(f.read())
 
     def save(self, magic: MagicType):
         x = splitext(self.read_path())
+        if self.config.get("compiled", False) is True:
+            with open(x, 'wb') as f:
+                return f.write(DataUnpickler.dumps(magic))
         if x[1] == '.yaml':
             a = {
                 "name": magic.name,
@@ -62,6 +69,7 @@ class MagicPath(DataPath, prefix='magic'):
 
 @dataclass(init=True, repr=True)
 class MagicType:
+    """Magic."""
     name: str
     type: str
     # Resistance should be defined in speciality
@@ -77,3 +85,7 @@ class MagicType:
         a = MagicPath(
             f"magic://{self.type}/{self.name}.{'yaml' if yaml_installed is True else 'ini'}")
         return a.read()
+
+
+def _main():
+    pass

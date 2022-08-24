@@ -1,0 +1,19 @@
+To write a localisation, first. We need to know the syntax. It's quite simple.
+`@namespace $0 Locale string, no need to put " or '.
+OR
+`@namespace #Window The window name, yes.
+
+Explanation:
+    Anything started except with @ is marked as comments.
+    Namespace is namespace. Place to put the identifier and text.
+    And then, $ -- $ used to recognise certain text is numerical and will be used as identifier.
+    That's the reason why there's no " or '
+    # is used as string identifier. If you don't want to use $.
+    But remember, 1 word only.
+
+Then, let's give it a shot!
+
+@main $0 RPGSample
+@main #Confirmation Konfirmasi
+@main #OK Oke
+@main #Cancel Batal
