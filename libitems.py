@@ -6,13 +6,17 @@ from configparser import ConfigParser
 from dataclasses import dataclass
 from posixpath import exists, realpath, splitext
 from typing import Any, Literal, Mapping, Union
-
+from libsavestate import DataUnpickler
 from libpostreq import yaml_installed
 from libshared import DataPath, load, parse
 
 
 class ItemPath(DataPath, prefix='items'):
+    """Item Protocol Handler"""
     def read(self):
+        if self._config.get("compiled", False) is True:
+            with open(self.read_path(), 'rb') as f:
+                return DataUnpickler.unload(f.read())
         x = splitext(self.read_path())
         if x[1] == '.yaml':
             a = load(self.read_path())
@@ -39,6 +43,9 @@ class ItemPath(DataPath, prefix='items'):
         raise Exception("Unrecognized extention: %s" % x[1][1:])
 
     def save(self, item: ItemType):
+        if self._config.get("compiled", False) is True:
+            with open(self.read_path(), 'wb') as f:
+                return f.write(DataUnpickler.dumps(item))
         x = splitext(self.read_path())
         if x[1] == '.yaml':
             a = {
@@ -76,3 +83,7 @@ class ItemType:
         a = ItemPath(
             f"items://{self.type}/{self.name}.{'yaml' if yaml_installed is True else 'ini'}")
         return a.read()
+
+
+def _main():
+    pass

@@ -27,3 +27,9 @@ ignore/*
 entry.npcl
 
 /note.txt
+/profiler.data
+/_info.py
+libcmd.py
+/profile/*
+/data/chara/_*
+_*
